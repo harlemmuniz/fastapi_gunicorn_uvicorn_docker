@@ -67,24 +67,24 @@ async def startup_event():
     producer = AIOProducer(
         {
             "bootstrap.servers": os.environ["BOOTSTRAP_SERVERS"],
-            "linger.ms": int(os.environ["TOPIC_GOOGLE_ANALYTICS_LINGER_MS"]),
+            "linger.ms": int(os.environ["KAFKA_TOPIC_LINGER_MS"]),
             "enable.idempotence": os.environ[
-                "TOPIC_GOOGLE_ANALYTICS_ENABLE_IDEMPOTENCE"
+                "KAFKA_TOPIC_ENABLE_IDEMPOTENCE"
             ],
             "max.in.flight.requests.per.connection": int(
-                os.environ["TOPIC_GOOGLE_ANALYTICS_INFLIGHT_REQS"]
+                os.environ["KAFKA_TOPIC_INFLIGHT_REQS"]
             ),
-            "acks": os.environ["TOPIC_GOOGLE_ANALYTICS_ACKS"],
+            "acks": os.environ["KAFKA_TOPIC_ACKS"],
             "key.serializer": StringSerializer("utf_8"),
-            "partitioner": os.environ["TOPIC_GOOGLE_ANALYTICS_PARTIOTIONER"],
+            "partitioner": os.environ["KAFKA_TOPIC_PARTIOTIONER"],
         }
     )
 
     client = AdminClient({"bootstrap.servers": os.environ["BOOTSTRAP_SERVERS"]})
     topic = NewTopic(
-        os.environ["TOPIC_GOOGLE_ANALYTICS_NAME"],
-        num_partitions=int(os.environ["TOPIC_GOOGLE_ANALYTICS_PARTITIONS"]),
-        replication_factor=int(os.environ["TOPIC_GOOGLE_ANALYTICS_REPLICAS"]),
+        os.environ["KAFKA_TOPIC_NAME"],
+        num_partitions=int(os.environ["KAFKA_TOPIC_PARTITIONS"]),
+        replication_factor=int(os.environ["KAFKA_TOPIC_REPLICAS"]),
     )
     try:
         futures = client.create_topics([topic])
@@ -130,7 +130,7 @@ async def send_analytics_dataLayer(
         )
     try:
         result = await producer.produce(
-            topic=os.environ["TOPIC_GOOGLE_ANALYTICS_NAME"],
+            topic=os.environ["KAFKA_TOPIC_NAME"],
             # key=dataLayer.hitType.lower().replace(r"s+", "-").encode("utf-8"), # uncomment to send a key value
             value=dataLayer.json(),
         )
