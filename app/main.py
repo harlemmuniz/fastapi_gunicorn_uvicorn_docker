@@ -134,6 +134,5 @@ async def send_analytics_dataLayer(
             # key=dataLayer.hitType.lower().replace(r"s+", "-").encode("utf-8"), # uncomment to send a key value
             value=dataLayer.json(),
         )
-        return {"timestamp": result.timestamp()}
     except KafkaException as ex:
         raise HTTPException(status_code=500, detail=ex.args[0].str())
