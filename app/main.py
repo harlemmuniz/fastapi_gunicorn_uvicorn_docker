@@ -111,13 +111,16 @@ class ProducerCallback:
       """
             )
 
+@app.get("/")
+def health_check_status():
+    return "FastAPI producer health is ok!"
 
 @app.post(
-    "/api/producer/ga-datalayer",
+    "/api/producer/ga-datalayer-web",
     status_code=201
     # , response_model=DataLayer
 )
-async def send_analytics_dataLayer(
+async def send_ga_dataLayer_from_web(
     dataLayer: DataLayer,
     authorized: bool = Depends(verify_host),
     authenticated: bool = Depends(auth_request),
@@ -133,6 +136,26 @@ async def send_analytics_dataLayer(
             topic=os.environ["KAFKA_TOPIC_NAME"],
             # key=dataLayer.hitType.lower().replace(r"s+", "-").encode("utf-8"), # uncomment to send a key value
             value=dataLayer.json(),
+        )
+    except KafkaException as ex:
+        raise HTTPException(status_code=500, detail=ex.args[0].str())
+
+@app.get(
+    "/api/producer/ga-datalayer-mobile",
+    status_code=201
+    # , response_model=DataLayer
+)
+async def send_ga_dataLayer_from_mobile(request: Request):
+    dataLayer = dict(request.query_params)
+    dataLayerType = type(dataLayer)
+    print(dataLayerType)
+    print(dataLayer)
+    
+    try:
+        result = await producer.produce(
+            topic=os.environ["KAFKA_TOPIC_NAME"],
+            # key=dataLayer.hitType.lower().replace(r"s+", "-").encode("utf-8"), # uncomment to send a key value
+            value=json.dumps(dataLayer).encode('utf-8'),
         )
     except KafkaException as ex:
         raise HTTPException(status_code=500, detail=ex.args[0].str())
